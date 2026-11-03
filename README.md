@@ -102,3 +102,8 @@ Stormline now offers **Precipitation** and **Tornado paths & warnings** radar vi
 ### Radar and notifications repair (November 2026)
 
 Radar now reuses stable basemap tiles during animation, with an OpenStreetMap basemap and RainViewer historical precipitation overlay. Tornado polygons are **NWS warning areas, not confirmed tornado tracks or predicted paths**. If iOS push authorization becomes stale, use **Repair subscription**, then **Send test push**. Keep Wireless Emergency Alerts enabled for critical weather.
+
+
+## Push delivery diagnostics (November 2026)
+
+If Stormline shows **Push subscription registered**, the device record is stored and authorized, but delivery is not yet confirmed. Use **Send test push**. Failure details now remain visible in the notification settings. An expired endpoint should be repaired using **Repair subscription**; a push-provider authorization failure means checking the original matching VAPID keys and redeploying. The notification endpoint returns nonsecret error codes, while Netlify function logs retain the diagnostic status. Do not publish the private VAPID key or substitute a new pair without repairing existing subscriptions. A successful provider response does not prove the phone displayed the notification.

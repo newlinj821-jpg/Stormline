@@ -1,0 +1,13 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import { createECDH } from 'node:crypto';
+import {inspectVapid,classifyPushFailure} from '../netlify/lib/push-diagnostics.mjs';
+const k=createECDH('prime256v1');k.generateKeys();
+const base64 = b=>b.toString('base64url');
+const env={VAPID_PUBLIC_KEY:base64(k.getPublicKey()),VAPID_PRIVATE_KEY:base64(k.getPrivateKey()),VAPID_SUBJECT:'https://example.com'};
+test('VAPID inspector accepts valid matching pair',()=>assert.equal(inspectVapid(env).configured,true));
+test('VAPID inspector rejects changed public key without leaking secret',()=>{const mismatch={...env,VAPID_PUBLIC_KEY:base64(createECDH('prime256v1').generateKeys())};const out=inspectVapid(mismatch);assert.equal(out.configured,false);assert.equal(out.code,'VAPID_KEYS_INVALID');assert.equal(JSON.stringify(out).includes(env.VAPID_PRIVATE_KEY),false);});
+test('VAPID inspector rejects missing or malformed subject',()=>{assert.equal(inspectVapid({}).code,'VAPID_MISSING');assert.equal(inspectVapid({...env,VAPID_SUBJECT:'not-a-contact'}).code,'VAPID_SUBJECT_INVALID');});
+test('push delivery diagnostics identify expired endpoints',()=>assert.equal(classifyPushFailure({statusCode:410}).code,'PUSH_ENDPOINT_EXPIRED'));
+test('push delivery diagnostics identify authorization failure',()=>assert.equal(classifyPushFailure({statusCode:403}).code,'PUSH_PROVIDER_AUTH_REJECTED'));
+test('push diagnostics never expose provider raw message',()=>assert.equal(JSON.stringify(classifyPushFailure({statusCode:400,message:'secret endpoint URL'})).includes('secret endpoint URL'),false));
