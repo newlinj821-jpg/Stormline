@@ -81,23 +81,39 @@
     const d=new Date();$('#local-time').textContent=new Intl.DateTimeFormat('en-US',{timeZone:loc.timezone||'UTC',hour:'numeric',minute:'2-digit',hour12:state.clock==='12'}).format(d).toUpperCase()+' LOCAL';
   }
   const apiParams=(l)=>{const q=new URLSearchParams({latitude:String(l.latitude),longitude:String(l.longitude),timezone:'auto',temperature_unit:unit(['fahrenheit','celsius']),wind_speed_unit:unit(['mph','kmh']),precipitation_unit:unit(['inch','mm']),forecast_days:'14',current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m',hourly:'temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,snowfall,weather_code,relative_humidity_2m,wind_speed_10m,wind_gusts_10m,uv_index,visibility,dew_point_2m',daily:'weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_probability_max,precipitation_sum,snowfall_sum,wind_speed_10m_max,wind_gusts_10m_max'});return q.toString();};
-  const timedFetch = async (url,options={})=>{const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),15000);try{const r=await fetch(url,{...options,signal:ctrl.signal});if(!r.ok)throw new Error(`Service returned ${r.status}`);return await r.json();}finally{clearTimeout(timer);}};
+  const timedFetch = async (url,options={})=>{
+    let lastError;
+    for(let attempt=0;attempt<3;attempt++){
+      const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),attempt===0?14000:20000);
+      try{
+        const r=await fetch(url,{...options,signal:ctrl.signal});
+        if(!r.ok){const err=new Error('Weather service HTTP '+r.status);err.retryable=r.status===429||r.status>=500;throw err;}
+        return await r.json();
+      }catch(e){
+        lastError=e;
+        if(e.retryable===false||(/HTTP 4(?!29)/).test(e.message||''))break;
+        if(attempt<2)await new Promise(resolve=>setTimeout(resolve,800*(attempt+1)+Math.floor(Math.random()*500)));
+      }finally{clearTimeout(timer);}
+    }
+    throw lastError||new Error('Weather service unavailable');
+  };
   async function loadAll(refresh=false){
     const l=currentLoc();if(!l)return;const localKey=`stormline.cache.${l.latitude},${l.longitude}.${state.units}`;
     ui.map.lat=l.latitude;ui.map.lon=l.longitude;ui.map.zoom=6;ui.loading=true;showError('');renderLocations();
     const cached=(()=>{try{return JSON.parse(localStorage.getItem(localKey));}catch{return null;}})();
-    if(cached?.weather){ui.weather=cached.weather;ui.air=cached.air||null;ui.lastRefresh=cached.at||0;renderWeather();}
-    else{renderLoading();}
+    if(cached?.weather?.current){ui.weather=cached.weather;ui.air=cached.air||null;ui.lastRefresh=cached.at||0;renderWeather();}
+    else if(ui.weather?.current&&ui.weather.latitude===Number(l.latitude)&&ui.weather.longitude===Number(l.longitude)){renderWeather();}
+    else{ui.weather=null;renderLoading();}
     const selectedId=state.selected;
     try{
       const weather=await timedFetch(`https://api.open-meteo.com/v1/forecast?${apiParams(l)}`);
       if(state.selected!==selectedId)return;
       if(weather.error||!weather.current)throw new Error(weather.reason||'No weather records returned');
-      ui.weather=weather;ui.lastRefresh=Date.now();renderWeather();showError('');
+      ui.weather=weather;ui.lastRefresh=Date.now();try{localStorage.setItem(localKey,JSON.stringify({weather,air:ui.air,at:ui.lastRefresh}));}catch{}renderWeather();showError('');
       const airPromise=timedFetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${encodeURIComponent(l.latitude)}&longitude=${encodeURIComponent(l.longitude)}&current=us_aqi,pm2_5,pm10,ozone&timezone=auto`);
-      airPromise.then(air=>{if(state.selected!==selectedId)return;ui.air=air;renderInsights();localStorage.setItem(localKey,JSON.stringify({weather,air,at:Date.now()}));}).catch(()=>{ui.air=null;renderInsights();localStorage.setItem(localKey,JSON.stringify({weather,at:Date.now()}));});
+      airPromise.then(air=>{if(state.selected!==selectedId)return;ui.air=air;renderInsights();try{localStorage.setItem(localKey,JSON.stringify({weather,air,at:ui.lastRefresh}));}catch{}}).catch(()=>{if(state.selected!==selectedId)return;renderInsights();});
       if(refresh)toast(`Updated forecast for ${l.name}`);
-    }catch(e){if(state.selected===selectedId){showError(`Could not refresh live conditions: ${e.message}. ${cached?.weather?'Showing the most recently saved forecast.':'Check your connection and try again.'}`);if(!cached?.weather)renderLoading();}}
+    }catch(e){if(state.selected===selectedId){const fallback=ui.weather?.current?ui.weather:cached?.weather?.current?cached.weather:null;if(fallback){ui.weather=fallback;ui.lastRefresh=ui.lastRefresh||cached?.at||0;renderWeather();showError('Weather service temporarily unavailable. Showing saved forecast from '+(ui.lastRefresh?new Date(ui.lastRefresh).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'an earlier update')+'. Tap refresh to retry.');}else{showError('Weather service temporarily unavailable after retries. Tap refresh to try again.');$('#hero-condition').textContent='Weather temporarily unavailable';$('#hourly').innerHTML='<div class="loading-lines">Forecast unavailable. Tap refresh to retry.</div>';$('#daily').innerHTML='<div class="loading-lines">Forecast unavailable. Tap refresh to retry.</div>';$('#insights').innerHTML='<div class="loading-lines">Weather observations unavailable.</div>';}}}
     finally{ui.loading=false;}
   }
   function renderLoading(){['#hero-temp'].forEach(s=>$(s).textContent='--');$('#hero-condition').textContent='Connecting to weather data…';$('#quick-stats').innerHTML='';$('#hourly').innerHTML='<div class="loading-lines">Fetching 24-hour weather forecast…</div>';$('#daily').innerHTML='<div class="loading-lines">Fetching 14-day weather forecast…</div>';$('#insights').innerHTML='<div class="loading-lines">Fetching atmospheric conditions…</div>'}
