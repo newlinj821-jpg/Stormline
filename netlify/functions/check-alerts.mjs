@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import * as webpush from 'web-push';
+import webpush from 'web-push';
 import { keysConfigured, isUS, officialCandidates, forecastCandidates, fetchOfficial, fetchRiskForecast, trimSeen } from '../lib/shared.mjs';
 
 /* Runs every 15 minutes on a published Netlify deploy, not a guaranteed life-safety alert feed.

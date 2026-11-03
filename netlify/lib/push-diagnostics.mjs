@@ -45,6 +45,9 @@ export function classifyPushFailure(error) {
   if (status === 400 || status === 413) {
     return {status:502, code:'PUSH_PROVIDER_BAD_REQUEST', error:'The push provider rejected the subscription or encrypted payload. Repair your subscription and retry.'};
   }
+  if (/setVapidDetails is not a function|sendNotification is not a function/i.test(message)) {
+    return {status:500,code:'PUSH_LIBRARY_IMPORT_ERROR',error:'The push sender library could not initialize. Redeploy the latest Stormline code.'};
+  }
   if (/vapid|private key|public key|elliptic|invalid subject/i.test(message)) {
     return {status:503, code:'VAPID_CONFIGURATION_ERROR', error:'Stormline cannot sign push messages using the configured VAPID credentials. Check the Netlify environment variables and redeploy.'};
   }

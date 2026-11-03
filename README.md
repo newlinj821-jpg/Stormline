@@ -107,3 +107,8 @@ Radar now reuses stable basemap tiles during animation, with an OpenStreetMap ba
 ## Push delivery diagnostics (November 2026)
 
 If Stormline shows **Push subscription registered**, the device record is stored and authorized, but delivery is not yet confirmed. Use **Send test push**. Failure details now remain visible in the notification settings. An expired endpoint should be repaired using **Repair subscription**; a push-provider authorization failure means checking the original matching VAPID keys and redeploying. The notification endpoint returns nonsecret error codes, while Netlify function logs retain the diagnostic status. Do not publish the private VAPID key or substitute a new pair without repairing existing subscriptions. A successful provider response does not prove the phone displayed the notification.
+
+
+## Web Push sender fix
+
+Both the test push endpoint and the scheduled alert sender now use the default import for the CommonJS `web-push` package (`import webpush from 'web-push'`). A namespace import can leave `setVapidDetails`/`sendNotification` unavailable under Node's CommonJS compatibility behavior, previously yielding a misleading VAPID credentials failure. Existing VAPID environment settings and existing device subscriptions can be retained; redeploy and send a test notification. A successful test response confirms handoff to the push provider, not necessarily on-screen delivery.

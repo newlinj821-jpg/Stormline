@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs';
-import * as webpush from 'web-push';
+import webpush from 'web-push';
 import { json, digest, token, equalSecret, validSubscription, safeLocations, safePrefs } from '../lib/shared.mjs';
 import { inspectVapid, classifyPushFailure } from '../lib/push-diagnostics.mjs';
 
