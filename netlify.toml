@@ -7,7 +7,7 @@
   node_bundler = "esbuild"
 
 [functions."check-alerts"]
-  schedule = "*/15 * * * *"
+  schedule = "*/10 * * * *"
 
 [[headers]]
   for = "/*"

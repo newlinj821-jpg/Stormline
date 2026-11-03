@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { sanitizeRules } from './intel-core.mjs';
 
 export const json = (body, status=200) => new Response(JSON.stringify(body), {status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 export const digest = str => createHash('sha256').update(str).digest('hex');
@@ -38,21 +39,22 @@ export function officialCandidates(features, prefs, locName){
     title:`${a.event} · ${locName}`,
     body:String(a.headline||a.description||'Official weather bulletin in effect.').replace(/\s+/g,' ').slice(0,220),
     tag:`nws-${digest(a.id||a.event).slice(0,24)}`,
-    urgent: a.severity==='Extreme'||a.event?.toLowerCase().includes('tornado'),
+    urgent: a.severity==='Extreme'||a.event?.toLowerCase().includes('tornado')||(a.severity==='Severe'&&/warning/i.test(a.event||'')),
     url:'/?tab=alerts'
   }));
 }
-export function forecastCandidates(w,prefs,locName,now=new Date()){
+export function forecastCandidates(w,prefs,locName,now=new Date(),rulesInput={}){
+  const rules=sanitizeRules(rulesInput);
   if(!w?.hourly?.time?.length)return [];
   const h=w.hourly, start=Math.max(0,h.time.findIndex(t=>t>=String(w.current?.time||'').slice(0,13)+':00')),end=Math.min(start+7,h.time.length),samples=key=>(h[key]||[]).slice(start,end).filter(x=>x!==null&&x!==undefined&&x!=='').map(Number).filter(Number.isFinite),max=key=>Math.max(0,...samples(key)),min=key=>Math.min(Infinity,...samples(key)),sum=key=>samples(key).reduce((a,b)=>a+b,0),codes=samples('weather_code');
   const hour=Math.floor(now.getTime()/3600000),bucket=Math.floor(hour/6),out=[];
   const add=(k,title,body)=>{if(prefs[k])out.push({key:`forecast:${k}:${locName}:${bucket}`,title:`${title} · ${locName}`,body,tag:`forecast-${k}-${digest(locName).slice(0,8)}`,url:'/',urgent:false});};
   if(codes.some(x=>[95,96,99].includes(x)))add('thunderstorm','Thunderstorms forecast','A forecast model indicates thunderstorms in the next several hours. This is lightning risk, not a detected nearby strike.');
-  if(sum('snowfall')>=1.5)add('snow','Snow forecast',`${sum('snowfall').toFixed(1)} cm of modeled snow in the next several hours.`);
-  if(max('precipitation_probability')>=80 && sum('precipitation')>=.25)add('rain','Heavy precipitation potential',`High precipitation chance; modeled amount approximately ${sum('precipitation').toFixed(2)} inches over the next several hours.`);
-  if(max('wind_gusts_10m')>=45)add('wind','Strong gusts forecast',`Forecast gusts may reach ${Math.round(max('wind_gusts_10m'))} mph in the next several hours.`);
-  if(max('temperature_2m')>=100)add('heat','Extreme heat forecast',`Forecast high temperatures may reach ${Math.round(max('temperature_2m'))}°F soon.`);
-  if(min('temperature_2m')<=10)add('cold','Very cold temperatures forecast',`Forecast temperatures may fall to ${Math.round(min('temperature_2m'))}°F soon.`);
+  if(sum('snowfall')>=rules.snowIn*2.54)add('snow','Snow forecast',`${sum('snowfall').toFixed(1)} cm of modeled snow in the next several hours.`);
+  if(max('precipitation_probability')>=80 && sum('precipitation')>=rules.rainIn)add('rain','Heavy precipitation potential',`High precipitation chance; modeled amount approximately ${sum('precipitation').toFixed(2)} inches over the next several hours.`);
+  if(max('wind_gusts_10m')>=rules.windMph)add('wind','Strong gusts forecast',`Forecast gusts may reach ${Math.round(max('wind_gusts_10m'))} mph in the next several hours.`);
+  if(max('temperature_2m')>=rules.hotF)add('heat','Extreme heat forecast',`Forecast high temperatures may reach ${Math.round(max('temperature_2m'))}°F soon.`);
+  if(min('temperature_2m')<=rules.coldF)add('cold','Very cold temperatures forecast',`Forecast temperatures may fall to ${Math.round(min('temperature_2m'))}°F soon.`);
   return out;
 }
 export async function fetchOfficial(l){

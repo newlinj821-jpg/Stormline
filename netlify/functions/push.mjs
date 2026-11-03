@@ -2,6 +2,7 @@ import { getStore } from '@netlify/blobs';
 import webpush from 'web-push';
 import { json, digest, token, equalSecret, validSubscription, safeLocations, safePrefs } from '../lib/shared.mjs';
 import { inspectVapid, classifyPushFailure } from '../lib/push-diagnostics.mjs';
+import { sanitizeRules } from '../lib/intel-core.mjs';
 
 const store = () => getStore('stormline-subscribers');
 const samePushDevice = (a,b) => Boolean(
@@ -47,7 +48,7 @@ export default async function handler(req) {
       const prefs = safePrefs(body.prefs);
       await data.setJSON(key,{
         subscription:body.subscription,manageHash:digest(manageToken),locations,prefs,
-        seen:previous?.seen||{},lastTestAt:previous?.lastTestAt||0,updatedAt:Date.now()
+        seen:previous?.seen||{},lastTestAt:previous?.lastTestAt||0,rules:body.rules?sanitizeRules(body.rules):(previous?.rules||sanitizeRules()),updatedAt:Date.now()
       });
       return json({ok:true,manageToken});
     }

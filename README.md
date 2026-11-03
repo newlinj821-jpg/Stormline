@@ -112,3 +112,45 @@ If Stormline shows **Push subscription registered**, the device record is stored
 ## Web Push sender fix
 
 Both the test push endpoint and the scheduled alert sender now use the default import for the CommonJS `web-push` package (`import webpush from 'web-push'`). A namespace import can leave `setVapidDetails`/`sendNotification` unavailable under Node's CommonJS compatibility behavior, previously yielding a misleading VAPID credentials failure. Existing VAPID environment settings and existing device subscriptions can be retained; redeploy and send a test notification. A successful test response confirms handoff to the push provider, not necessarily on-screen delivery.
+
+
+# STORMLINE 2.0 — FREE WEATHER INTELLIGENCE
+
+Stormline is a self-hosted weather progressive web app. All new weather sources used here are free-to-access, no subscription or paid key required. Hosting and service free-tier limits still apply; do not assume unlimited usage or guaranteed delivery. No ads, analytics pixels, or sign-up paywalls are included.
+
+## Integrated features
+
+- NOAA MRMS **latest U.S. base reflectivity** in an interactive OpenStreetMap-based storm map, with pan, zoom and recenter, loading state and timestamp indicating when the *image loaded*, not exact radar scan time.
+- RainViewer **past radar playback** remains accessible by selecting “Past radar” in Live map.
+- Official NOAA/SPC **Day 1 categorical, tornado, hail and wind outlooks** using point-in-polygon ArcGIS queries, and official SPC risk area map. Probabilistic SPC values cover severe weather within 25 miles of a point in the issued outlook period.
+- NOAA/NWS **local storm reports within ~110 miles** in the past 24 hours (observed/reported, not forecasts). Dates and distance, not inferred conditions.
+- Nearest official **NWS airport/station observations**, wind and gust, humidity and measured temperature, with actual timestamp and station location distance.
+- Free NOAA nowCOAST **15-minute lightning-density WMS**: attempts to discover the published layer and render the public density image. Network failures surface as *Unavailable*. **It does not provide individual strike coordinates, per-strike alerts, or strike-distance circles**. The view must not pretend to have that information.
+- **48-hour snowfall visualization** from Open-Meteo model values, a freezing-rain code signal, and clear declaration that ice accumulations are not computed.
+- **Custom push alert thresholds** for forecast gusts, snow, precipitation, extreme heat and extreme cold, with per-location timezone quiet hours. Severe/urgent official warnings bypass optional quiet hours. Threshold rules sync to the existing subscription using Netlify Blobs. Rules remain locally saved if that sync fails; UI explicitly reports whether server sync succeeded.
+- **Reliability center**: last browser forecast cache age, server intel source check age, last loaded radar image, warning status, verified push instructions and per-data-source failures.
+- Existing official warning polygons, storm-motion *text where NOAA includes it*, saved cities, iOS Web Push, daily forecasts, and global historical radar remain.
+
+## Explicitly NOT supported (no false data)
+
+- Individual lightning strike coordinates or precise strike-radius push notifications: not supplied by the freely available NOAA density map. This would require another properly licensed data feed.
+- Single-site NEXRAD radial velocity, radar-inferred hail core tracks and live storm-cell motion/ETA: not included in the freely available pre-rendered MRMS product. A warning polygon is not a confirmed tornado path. Do not display a fabricated path, velocity field or arrival time.
+- Guaranteed immediate life-safety delivery: iOS Web Push, NWS feeds and scheduled hosting are best effort. Keep Wireless Emergency Alerts on.
+
+## Implementation and updates
+
+The website uses `public/` as Netlify publish directory, functions at `netlify/functions`, free public data sources with server-side input validation, and the existing VAPID keys. No new environment variables or paid service subscriptions are required. Connect the repository directly to Netlify and allow Netlify to publish the new `main` commit.
+
+Stormlab runs as a lightweight independently loaded module (`/stormlab.js`) and a separate stylesheet (`/stormlab.css`). It locates the selected saved location through Stormline's existing local preference store. For US cities it requests `/ .netlify/functions/intelligence` (without the intentional space) and renders official metrics with per-source failure status; outside U.S. locations retain the existing worldwide forecast and RainViewer history.
+
+Do not add client-side app secrets, claim a failed API response means no severe weather, or mislabel forecast indicators as real-time detections.
+
+## Data credits
+- NOAA/NWS Weather API: https://api.weather.gov
+- NOAA NWS radar (MRMS): https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer
+- NOAA/SPC outlook GIS: https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/SPC_wx_outlks/MapServer
+- NOAA NWS storm reports GIS: https://mapservices.weather.noaa.gov/vector/rest/services/obs/nws_local_storm_reports/MapServer
+- NOAA nowCOAST lightning density: https://nowcoast.noaa.gov/geoserver/observations/lightning_detection/ows
+- Open-Meteo forecasts: https://open-meteo.com
+- RainViewer past radar: https://www.rainviewer.com
+- OpenStreetMap contributors: https://www.openstreetmap.org/copyright

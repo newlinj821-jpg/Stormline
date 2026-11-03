@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {coords,milesBetween,spcSummary,normalizeReports,stationReading,sanitizeRules,isQuietLocal,describeMotion} from '../netlify/lib/intel-core.mjs';
+test('coordinate validation rejects invalid points',()=>{assert.equal(coords(91,-89),null);assert.equal(coords(41,-181),null);assert.deepEqual(coords('40.69','-89.59'),{latitude:40.69,longitude:-89.59});});
+test('distance zero and symmetrical',()=>{const a={latitude:40,longitude:-90},b={latitude:41,longitude:-90};assert.equal(milesBetween(a,a),0);assert.ok(Math.abs(milesBetween(a,b)-milesBetween(b,a))<.000001);});
+test('SPC categoric outlook uses highest overlapping tier',()=>{assert.equal(spcSummary([{attributes:{dn:3}},{attributes:{dn:6}}],'categorical').label,'Moderate');assert.equal(spcSummary([{attributes:{dn:15}}],'tornado').label,'15%');});
+test('SPC no polygon is not reported as zero risk',()=>assert.equal(spcSummary([],'categorical').label,'Outside outlined area'));
+test('storm reports sorted by proximity with source fields escaped only by browser',()=>{const l={latitude:40,longitude:-89},result=normalizeReports([{geometry:{coordinates:[-89.1,40]},properties:{descript:'Hail',magnitude:'1.00'}},{geometry:{coordinates:[-98,50]},properties:{descript:'Far away'}}],l);assert.equal(result.length,1);assert.equal(result[0].type,'Hail');});
+test('station reading converts C and kmh correctly',()=>{const r=stationReading({properties:{name:'Test',stationIdentifier:'KAAA'},geometry:{coordinates:[-89,40]}},{properties:{timestamp:'2026-11-03T15:00:00Z',temperature:{value:20},windSpeed:{value:16},windGust:{value:40},relativeHumidity:{value:78}}},{latitude:40,longitude:-89});assert.equal(r.tempF,68);assert.equal(r.gustMph,25);});
+test('notification rules are bounded and valid',()=>{const a=sanitizeRules({snowIn:300,windMph:-5,quiet:true,quietStart:'25:90'});assert.equal(a.snowIn,24);assert.equal(a.windMph,15);assert.equal(a.quietStart,'22:00');});
+test('quiet hours cross midnight in saved timezone',()=>{const r=sanitizeRules({quiet:true,quietStart:'22:00',quietEnd:'07:00'});assert.equal(isQuietLocal('America/Chicago',r,new Date('2026-11-03T07:00:00Z')),true);assert.equal(isQuietLocal('America/Chicago',r,new Date('2026-11-03T18:00:00Z')),false);});
+test('motion parser returns only reported NWS movement',()=>{assert.deepEqual(describeMotion('Storm MOVING NORTHEAST AT 40 MPH.'),{direction:'NORTHEAST',speedMph:40});assert.equal(describeMotion('A tornado might occur soon'),null);});

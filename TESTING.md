@@ -14,3 +14,7 @@
 12. Simulate offline: previously cached weather remains visible; refresh error explicitly says weather may be stale.
 
 Automated local tests: `node --test tests/*.test.mjs`. These test alert classification, forecast thresholds, location validation and push endpoint validation. A deployed Netlify end-to-end test with valid VAPID keys and real Apple/Google push delivery is still required; it cannot be proven by unit tests alone.
+
+
+## Stormline 2.0
+Run `npm test` after publishing: free-source intelligence, coordinates, SPC classification, storm reports, station conversion, quiet hours, and threshold tests. Use iPhone Home Screen app to test push delivery. NOAA tiles and nowCOAST lightning depend on external availability and must show an error when unavailable; do not confuse a successful JavaScript test with production API reachability.

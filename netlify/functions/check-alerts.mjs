@@ -1,8 +1,9 @@
 import { getStore } from '@netlify/blobs';
 import webpush from 'web-push';
 import { keysConfigured, isUS, officialCandidates, forecastCandidates, fetchOfficial, fetchRiskForecast, trimSeen } from '../lib/shared.mjs';
+import { isQuietLocal } from '../lib/intel-core.mjs';
 
-/* Runs every 15 minutes on a published Netlify deploy, not a guaranteed life-safety alert feed.
+/* Runs every 10 minutes on a published Netlify deploy, not a guaranteed life-safety alert feed.
    Concurrency is deliberately bounded to stay within free-tier usage. */
 export default async function handler(){
   if(!keysConfigured()){console.warn('Stormline: VAPID keys missing; skipping scheduled scan.');return;}
@@ -20,7 +21,7 @@ export default async function handler(){
       const [official,forecast]=await loadLoc(l);let alerts=[];
       if(official.status==='fulfilled')alerts.push(...officialCandidates(official.value.features,record.prefs,l.name));else failures++;
       if(forecast.status==='fulfilled'){
-        alerts.push(...forecastCandidates(forecast.value,record.prefs,l.name));
+        alerts.push(...forecastCandidates(forecast.value,record.prefs,l.name,new Date(),record.rules));
         // Daily local summary, once per local day during approximately 07:00–07:59.
         const local=new Date().toLocaleString('sv-SE',{timeZone:l.timezone||'UTC',hour12:false});
         if(record.prefs?.daily&&local.slice(11,13)==='07'){
@@ -29,6 +30,7 @@ export default async function handler(){
       }else failures++;
       // Prioritize urgent official alerts, capped to avoid flooding user devices.
       for(const alert of alerts.slice(0,6)){
+        if(isQuietLocal(l.timezone,record.rules)&&!alert.urgent)continue;
         if(seen[alert.key])continue;
         try{await webpush.sendNotification(record.subscription,JSON.stringify(alert),{TTL:alert.urgent?900:3600,urgency:alert.urgent?'high':'normal'});seen[alert.key]=Date.now();changed=true;sent++;}
         catch(e){failures++;if([404,410].includes(e.statusCode)){await store.delete(item.key);return;}console.error('Push delivery failure:',e.statusCode||e.message);}
