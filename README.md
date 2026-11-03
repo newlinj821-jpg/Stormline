@@ -92,3 +92,9 @@ To serve the static interface locally: `cd public && python3 -m http.server 8080
 ## Data & privacy
 
 There are no ad pixels or third-party analytics in Stormline. The forecast providers necessarily receive coordinates to respond to weather queries; map/radar providers receive the viewed map area. Browser localStorage retains saved locations and preferences on the current device. When push is enabled, subscription information, saved location coordinates and selected categories are stored in a site-private Netlify Blobs store accessible to the server code. Turning push off deletes that subscription record. If Netlify retention backups exist they follow Netlify's policies. This simple app does not implement user accounts or cross-device sync.
+
+## Tornado tracker and radar map (v1.1)
+
+Stormline now offers **Precipitation** and **Tornado paths & warnings** radar views. The latter uses `api.weather.gov/points/{lat},{lon}` to resolve the selected U.S. state, then `api.weather.gov/alerts/active?area={STATE}` to display *official active tornado watch/warning areas*. Red polygons signify warnings, amber dotted polygons signify watches. Where NWS provides no polygon, the bulletin is listed without an invented outline. Reported direction/speed appears in text only when available. **These are not confirmed tornado trajectories** or future storm predictions; do not use the layer as the sole basis for seeking shelter.
+
+**Center on location** restores the map to the selected city's coordinates. Weather radar returns transparent tiles where there is no measurable precipitation; the map alone may look clear during dry conditions. Radar tiles are still capped at level 7 per RainViewer's public API. NWS data and coverage can be delayed or unavailable.
