@@ -2,16 +2,16 @@
 
 **A GitHub-ready, installable website for Netlify.** No ads, analytics SDKs, accounts, premium paywalls, or paid API keys required for core weather tracking.
 
-## Deploy from GitHub to Netlify
+## Deploy the existing GitHub repository to Netlify
 
-1. **Extract this ZIP** first. GitHub does not automatically unpack a ZIP uploaded through its web interface. The extracted contents should include `public/`, `netlify/`, `netlify.toml`, `package.json` and `README.md` at the **repository root**.
-2. In GitHub, create a **new repository**, for example `Stormline-Weather`. Upload **all files and folders** from this package to the new repository. Do not upload only `index.html`. Alternatively use GitHub Desktop to push the folder.
-3. In **Netlify → Add new project → Import an existing project → GitHub**, choose the new repository.
-4. The checked-in `netlify.toml` defines the build. Netlify should use **Build command: `npm install --no-audit --no-fund`**, **Publish directory: `public`**, **Functions directory: `netlify/functions`**. Leave the **base directory empty**.
-5. Deploy. Open the assigned HTTPS Netlify URL. The live forecast, geocoding, NWS alerts and radar should work without a weather API key.
-6. To enable background push alerts, follow the next section; the website is already usable without push configuration.
+The complete project is already uploaded to **[`newlinj821-jpg/Stormline`](https://github.com/newlinj821-jpg/Stormline)** on the `main` branch. **You do not need to upload, unzip, move, or copy any project files.**
 
-**Keep Stormline separate from any existing project.** Publishing this as the root of an existing multi-site project can override that site's `netlify.toml`.
+1. In **Netlify → Add new project → Import an existing project → GitHub**, select `newlinj821-jpg/Stormline`.
+2. **Base directory:** leave blank. The checked-in `netlify.toml` configures the build command (`npm install --no-audit --no-fund`), publish directory (`public`) and functions directory (`netlify/functions`).
+3. Select **Deploy**. Visit the assigned HTTPS URL. Forecasts, geocoding, NWS warnings, radar and installable app work without a weather API key.
+4. To enable background push notifications when the app is closed, follow the one-time notification configuration below.
+
+**Keep Stormline separate from SanctumEros and other sites.** Connecting this repository to its own Netlify project avoids affecting other websites.
 
 ## Enable actual background push notifications
 
