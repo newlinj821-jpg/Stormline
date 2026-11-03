@@ -98,3 +98,7 @@ There are no ad pixels or third-party analytics in Stormline. The forecast provi
 Stormline now offers **Precipitation** and **Tornado paths & warnings** radar views. The latter uses `api.weather.gov/points/{lat},{lon}` to resolve the selected U.S. state, then `api.weather.gov/alerts/active?area={STATE}` to display *official active tornado watch/warning areas*. Red polygons signify warnings, amber dotted polygons signify watches. Where NWS provides no polygon, the bulletin is listed without an invented outline. Reported direction/speed appears in text only when available. **These are not confirmed tornado trajectories** or future storm predictions; do not use the layer as the sole basis for seeking shelter.
 
 **Center on location** restores the map to the selected city's coordinates. Weather radar returns transparent tiles where there is no measurable precipitation; the map alone may look clear during dry conditions. Radar tiles are still capped at level 7 per RainViewer's public API. NWS data and coverage can be delayed or unavailable.
+
+### Radar and notifications repair (November 2026)
+
+Radar now reuses stable basemap tiles during animation, with an OpenStreetMap basemap and RainViewer historical precipitation overlay. Tornado polygons are **NWS warning areas, not confirmed tornado tracks or predicted paths**. If iOS push authorization becomes stale, use **Repair subscription**, then **Send test push**. Keep Wireless Emergency Alerts enabled for critical weather.
