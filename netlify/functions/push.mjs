@@ -15,14 +15,16 @@ export default async function handler(req){
   const key='subscription-'+digest(body.subscription.endpoint),data=store();
   try{
     const previous=await data.get(key,{type:'json'});
+    // Distinguish a server-verified enrollment from a stale browser token.
+    if(body.action==='verify')return json({enrolled:Boolean(previous&&equalSecret(body.manageToken,previous.manageHash))});
     if(body.action==='subscribe'){
-      if(previous&&!equalSecret(body.manageToken,previous.manageHash))return json({error:'This subscription is already managed by another browser session. Disable and re-enable notifications to reset it.'},403);
+      if(previous&&!equalSecret(body.manageToken,previous.manageHash))return json({code:'SUBSCRIPTION_CONFLICT',error:'This device needs its notification subscription repaired before it can be managed.'},409);
       const manageToken=previous?body.manageToken:token(),locations=safeLocations(body.locations),prefs=safePrefs(body.prefs);
       if(!locations.length)return json({error:'Choose a location before subscribing'},400);
       await data.setJSON(key,{subscription:body.subscription,manageHash:digest(manageToken),locations,prefs,seen:previous?.seen||{},lastTestAt:previous?.lastTestAt||0,updatedAt:Date.now()});
       return json({ok:true,manageToken});
     }
-    if(!previous||!equalSecret(body.manageToken,previous.manageHash))return json({error:'Subscription authorization failed'},403);
+    if(!previous||!equalSecret(body.manageToken,previous.manageHash))return json({code:'SUBSCRIPTION_AUTHORIZATION_FAILED',error:'This device needs its notification subscription repaired.'},403);
     if(body.action==='unsubscribe'){await data.delete(key);return json({ok:true});}
     if(body.action==='test'){
       if(Date.now()-(previous.lastTestAt||0)<60000)return json({error:'Please wait one minute between test notifications.'},429);
