@@ -65,3 +65,12 @@
   .lab-map-status{right:10px;max-width:calc(100% - 20px);bottom:30px}
   .lab-map-attrib{bottom:5px;font-size:9px}
 }
+
+/* Mobile map controls must remain inside the viewport. */
+.lab-map-tools,.lab-layers{box-sizing:border-box;width:100%;min-width:0}
+.lab-map-tools{display:flex;flex-wrap:wrap}
+.lab-layers{overflow:visible;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.lab-layers button{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.35;padding:10px 5px}
+.lab-map-tools>.lab-small{flex:0 0 auto}
+.lab-map-status{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:740px){.lab-layers{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-map-tools>.lab-small{width:100%}.lab-map{height:340px}}
