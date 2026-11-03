@@ -38,3 +38,7 @@
 .modal{box-sizing:border-box;margin:auto 0;max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);width:100%}
 .modal-map-wrap .radar-viewport{height:min(44dvh,350px);min-height:230px}
 }
+
+/* Notification feedback: one unobtrusive message above bottom navigation */
+#toast-root{position:fixed;z-index:9999;bottom:calc(82px + env(safe-area-inset-bottom));left:12px;right:12px;pointer-events:none;display:flex;justify-content:center}
+#toast-root .toast{position:relative;inset:auto;transform:none;margin:0;max-width:min(440px,100%);width:auto;box-sizing:border-box;pointer-events:auto;line-height:1.45}
