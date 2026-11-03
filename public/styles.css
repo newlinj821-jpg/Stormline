@@ -8,3 +8,14 @@
 
 /* Stormline 1.1: true-area NWS tornado warning overlays and explicit map recentering. */
 .warning-map-layer{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:hidden}.radar-mode-tabs{display:flex;flex-wrap:wrap;gap:9px;margin:4px 0 13px}.radar-mode-tabs .btn.selected{background:#276481;color:#fff;border-color:#4cbee1}.map-location-label{font-size:11px;color:#9bb2cc;margin-top:8px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}.map-location-label strong{color:#eff8ff}.tornado-tracker-panel{margin-top:17px;padding:16px;background:#112037;border:1px solid #304e69;border-radius:12px}.tornado-tracker-panel[hidden]{display:none!important}.tornado-tracker-panel h3{font-size:15px;margin:0 0 9px}.track-entry{border-top:1px solid #30445c;padding:13px 0}.track-entry strong{display:block;font-size:13px;color:#fff}.track-entry small{display:block;color:#98afc8;margin:5px 0 0;font-size:11px;line-height:1.5}.track-entry p{color:#ffdcaa;font-size:11px;line-height:1.5;margin:9px 0}.track-count{color:#acd1ef;font-size:12px;margin:12px 0}.track-clear{font-size:12px;color:#bacddf;line-height:1.7;margin-top:10px}.map-buttons button:first-child{font-size:18px}
+/* Stormline 1.2: iOS status-bar safe areas and truthful mobile tab state. */
+@media(max-width:730px){
+  .topbar{height:calc(61px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);padding-left:max(17px,env(safe-area-inset-left, 0px));padding-right:max(17px,env(safe-area-inset-right, 0px));}
+  .topbar-left{flex:1;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .topbar-right{flex:0 0 auto;gap:8px;}
+  .topbar .icon-button,.topbar .topbar-search{width:38px;height:38px;flex:0 0 38px;}
+  .modal-backdrop{padding-top:max(12px,env(safe-area-inset-top, 0px));padding-bottom:max(12px,env(safe-area-inset-bottom, 0px));}
+  .modal{max-height:calc(100dvh - max(12px,env(safe-area-inset-top, 0px)) - max(12px,env(safe-area-inset-bottom, 0px)));overscroll-behavior:contain;}
+  #toast-root{bottom:calc(78px + env(safe-area-inset-bottom, 0px));left:12px;right:12px;}
+  #toast-root .toast{max-width:none;}
+}
