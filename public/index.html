@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#080f1d" />
+  <meta name="description" content="Stormline — an ad-free weather intelligence dashboard with radar, detailed forecasts and severe weather notifications." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Stormline" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>Stormline | Weather Intelligence</title>
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <button type="button" class="brand" data-action="home" aria-label="Stormline home">
+        <span class="brand-symbol"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M5 23.4c6.4-9.8 13.8-14.3 29.8-13.5L24 22.2l10.3-1.8L13 34l6.6-13.2Z" fill="currentColor"/></svg></span>
+        <span><strong>STORMLINE</strong><small>WEATHER INTELLIGENCE</small></span>
+      </button>
+      <div class="sidebar-scroll">
+        <div class="nav-label">EXPLORE</div>
+        <nav class="primary-nav" aria-label="Sections">
+          <button class="nav-link active" data-view="overview"><span data-icon="layout-dashboard"></span>Overview<span class="nav-indicator"></span></button>
+          <button class="nav-link" data-view="radar"><span data-icon="radar"></span>Radar history<span class="nav-indicator"></span></button>
+          <button class="nav-link" data-view="forecast"><span data-icon="calendar-range"></span>Forecast<span class="nav-indicator"></span></button>
+          <button class="nav-link" data-view="alerts"><span data-icon="siren"></span>Weather alerts<span class="nav-indicator"></span></button>
+        </nav>
+        <div class="nav-label locations-label">YOUR LOCATIONS <button aria-label="Add location" class="small-plus" data-action="search" title="Add a location">+</button></div>
+        <div id="sidebar-locations" class="sidebar-locations"></div>
+      </div>
+      <div class="sidebar-footer">
+        <button class="nav-link" data-action="settings"><span data-icon="settings-2"></span>Preferences</button>
+        <div class="sidebar-privacy"><span class="privacy-dot"></span> AD-FREE. ALWAYS.</div>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left"><span class="eyebrow">WEATHER COMMAND CENTER</span><span class="topbar-slash">/</span><span id="topbar-location">Loading location</span></div>
+        <div class="topbar-right">
+          <span id="last-updated" class="last-updated">Connecting to weather sources</span>
+          <button class="icon-button" data-action="refresh" title="Refresh data" aria-label="Refresh data"><span data-icon="refresh-cw"></span></button>
+          <button class="icon-button notify-button" data-action="notifications" aria-label="Notification settings" title="Notifications"><span data-icon="bell"></span><i id="bell-dot"></i></button>
+          <button class="topbar-search" data-action="search"><span data-icon="search"></span><span>Search any location</span><kbd> / </kbd></button>
+        </div>
+      </header>
+      <main class="main-layout">
+        <section class="main-column">
+          <div id="global-error" class="notice error-notice hidden" role="alert"></div>
+          <div id="location-heading" class="location-heading">
+            <div><div class="section-kicker"><span class="live-dot"></span> CURRENT CONDITIONS <span id="local-time" class="time-label"></span></div>
+            <div class="city-line"><h1 id="city-name">—</h1><button class="title-chevron" data-action="search" aria-label="Choose a city"><span data-icon="chevron-down"></span></button></div>
+            <div class="location-sub" id="location-sub">Weather, anywhere.</div></div>
+            <button class="outlined-action" data-action="locate"><span data-icon="locate-fixed"></span><span>Use my location</span></button>
+          </div>
+
+          <section id="hero" class="hero panel" aria-label="Current weather">
+            <div class="hero-grid"></div><div class="hero-orb orb-a"></div><div class="hero-orb orb-b"></div>
+            <div class="hero-inner">
+              <div class="hero-top"><div><div class="hero-overline" id="hero-condition-label">LOCAL OBSERVATIONS</div><div class="hero-condition" id="hero-condition">Fetching conditions…</div></div><span class="hero-status"><span class="pulse"></span> LIVE DATA</span></div>
+              <div class="hero-center"><div class="big-temp"><span id="hero-temp">--</span><span class="degree">°</span></div><div id="hero-art" class="weather-art" aria-hidden="true"></div></div>
+              <div class="hero-feels" id="hero-feels">Feels like —</div>
+              <div class="hero-bottom"><span id="hero-high-low">↑ — &nbsp;&nbsp; ↓ —</span><span id="hero-description">Forecast details updating</span></div>
+            </div>
+          </section>
+
+          <div class="quick-stats" id="quick-stats" aria-label="Weather statistics"></div>
+          <section class="panel section-card" id="hourly-card">
+            <div class="card-heading"><div><div class="section-kicker">THE NEXT 24 HOURS</div><h2>Hour by hour</h2></div><button class="text-button" data-view="forecast">Full forecast <span data-icon="arrow-up-right"></span></button></div>
+            <div id="hourly" class="hourly-scroll"><div class="loading-lines">Loading hourly forecast…</div></div>
+            <div class="chart-heading"><span>PRECIPITATION PROBABILITY</span><span id="hourly-peak">—</span></div>
+            <div id="precip-chart" class="precip-chart"></div>
+          </section>
+          <section class="panel section-card" id="forecast-card">
+            <div class="card-heading"><div><div class="section-kicker">PLANNING AHEAD</div><h2>14-day outlook</h2></div><span class="small-muted">Select a day for details</span></div>
+            <div id="daily" class="daily-list"><div class="loading-lines">Loading extended forecast…</div></div>
+          </section>
+          <section class="panel section-card" id="insights-card">
+            <div class="card-heading"><div><div class="section-kicker">UNDER THE SURFACE</div><h2>Atmospheric details</h2></div><span class="small-muted">Current conditions</span></div>
+            <div id="insights" class="insight-grid"></div>
+          </section>
+          <footer class="credits">Forecasts: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> · Official U.S. warnings: <a href="https://www.weather.gov/" target="_blank" rel="noopener">NWS</a> · Radar: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> · Base map: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Data availability and refresh intervals vary. Not an emergency warning system.</footer>
+        </section>
+        <aside class="right-column" aria-label="Radar and severe weather intelligence">
+          <section class="panel radar-card" id="radar-card">
+            <div class="card-heading compact"><div><div class="section-kicker">PRECIPITATION TRACKER</div><h2>Weather radar</h2></div><button class="square-action" data-action="radar-expand" title="Expand radar" aria-label="Expand radar"><span data-icon="maximize-2"></span></button></div>
+            <div class="radar-viewport" id="radar-viewport"><div class="map-content" id="map-content"></div><span class="map-crosshair">+</span><div class="map-buttons"><button data-action="zoom-in" aria-label="Zoom in">+</button><button data-action="zoom-out" aria-label="Zoom out">−</button></div><div class="map-attribution">© OpenStreetMap · RainViewer</div></div>
+            <div class="radar-controls"><button class="round-control" data-action="radar-play" id="radar-play" aria-label="Play radar timeline"><span data-icon="play"></span></button><input type="range" aria-label="Radar time" id="radar-slider" min="0" max="0" value="0" /><span id="radar-time" class="radar-time">—</span></div>
+            <div class="radar-legend"><span>LIGHT</span><div class="rain-gradient"></div><span>HEAVY</span></div>
+            <div id="radar-message" class="radar-message">Radar is loading. Past observations, not a future forecast.</div>
+          </section>
+          <section class="panel alert-card" id="alert-card"><div class="card-heading compact"><div><div class="section-kicker">OFFICIAL WARNINGS</div><h2>Severe weather</h2></div><span class="alert-count" id="alert-count">—</span></div><div id="alerts-content"><div class="loading-lines">Checking weather bulletins…</div></div><button class="alert-footer" data-view="alerts">View all alerts <span data-icon="arrow-right"></span></button></section>
+          <section class="panel risk-card"><div class="card-heading compact"><div><div class="section-kicker">NEXT 24 HOURS</div><h2>Conditions watch</h2></div><span data-icon="activity" class="risk-icon"></span></div><div id="risk-content"></div></section>
+          <section class="panel sun-card"><div class="card-heading compact"><div><div class="section-kicker">DAYLIGHT CYCLE</div><h2>Sun & sky</h2></div><span data-icon="sunrise" class="sun-icon"></span></div><div id="sun-content"></div></section>
+          <div class="rail-note"><span data-icon="shield-check"></span><p>Your saved locations and preferences stay in this browser. Push subscriptions, if enabled, are stored securely on your Netlify site.</p></div>
+        </aside>
+      </main>
+    </div>
+  </div>
+  <nav class="mobile-tabs" aria-label="Mobile navigation"><button data-view="overview" class="mobile-tab active"><span data-icon="layout-dashboard"></span>Today</button><button data-view="radar" class="mobile-tab"><span data-icon="radar"></span>Radar</button><button data-view="forecast" class="mobile-tab"><span data-icon="calendar-range"></span>Forecast</button><button data-view="alerts" class="mobile-tab"><span data-icon="siren"></span>Alerts</button><button data-action="settings" class="mobile-tab"><span data-icon="settings-2"></span>Settings</button></nav>
+  <div id="modal-root"></div>
+  <div id="toast-root" aria-live="polite" aria-atomic="true"></div>
+  <script defer src="/app.js"></script>
+</body>
+</html>
