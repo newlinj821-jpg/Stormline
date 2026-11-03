@@ -43,3 +43,25 @@
 .lab-toast{position:fixed;z-index:10000;bottom:calc(85px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#1c3d56;color:#e1f6fb;border:1px solid #4a9bb7;border-radius:10px;padding:12px 15px;box-shadow:0 8px 30px #0008;max-width:min(90vw,400px);font-size:12px}
 @media(max-width:740px){.stormlab{padding:17px 14px}.lab-head{display:block}.lab-live{display:inline-block;margin-top:10px}.lab-tabs{margin-left:-2px;margin-right:-2px}.lab-risk-grid,.lab-measure-grid{gap:7px}.lab-risk-value{font-size:20px}.lab-rule-grid{grid-template-columns:1fr}.lab-map{height:340px}.lab-map-tools{align-items:stretch}.lab-layers{flex:1}.lab-layers button{font-size:11px;padding:10px 9px}.lab-snow-chart{gap:3px}.lab-snow-column small{font-size:8px}.lab-health-item{grid-template-columns:13px 96px 1fr;gap:6px}.lab-health-item small{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.lab-tabs button,.lab-layers button{transition:none}}
+
+/* 2.0.1 mobile radar repair: readable layers, safe spacing, and visible map errors */
+.lab-map{background:#19364c}
+.lab-tiles{z-index:1;overflow:hidden}
+.lab-map-pin{pointer-events:none}
+.lab-map-status{max-width:calc(100% - 100px);line-height:1.5;overflow-wrap:anywhere}
+.lab-layers{min-width:0;scroll-padding-inline:4px;scroll-snap-type:x proximity}
+.lab-layers button{scroll-snap-align:start;flex:0 0 auto}
+.lab-map-tools{min-width:0}
+@media(max-width:740px){
+  .stormlab{scroll-margin-top:calc(80px + env(safe-area-inset-top));}
+  .lab-head{padding-top:4px}
+  .lab-map-tools{display:block}
+  .lab-layers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;width:100%;gap:7px}
+  .lab-layers button{white-space:normal;line-height:1.35;min-height:42px;padding:9px 6px;overflow-wrap:break-word}
+  .lab-map-tools>.lab-small{width:100%;margin-top:8px;min-height:42px}
+  .lab-tabs{scroll-padding-left:6px;overscroll-behavior-x:contain}
+  .lab-tabs button{flex:0 0 auto}
+  .lab-map{height:340px}
+  .lab-map-status{right:10px;max-width:calc(100% - 20px);bottom:30px}
+  .lab-map-attrib{bottom:5px;font-size:9px}
+}

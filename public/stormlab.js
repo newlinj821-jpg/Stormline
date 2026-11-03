@@ -86,7 +86,16 @@
   function paintMap(fast=false){const l=location(),el=$('#lab-map');if(!el||!l||$('#lab-map').closest('[hidden]'))return;if(!state.center)state.center={latitude:Number(l.latitude),longitude:Number(l.longitude)};
     const {width:w,height:h}=mapSize(),z=state.zoom,center=merc(state.center.latitude,state.center.longitude,z),elTiles=$('#lab-tiles');
     if(!elTiles)return;const existing=new Map([...elTiles.querySelectorAll('img')].map(im=>[im.dataset.key,im])),keep=new Set();const minX=Math.floor((center.x-w/2)/256)-1,maxX=Math.floor((center.x+w/2)/256)+1,minY=Math.floor((center.y-h/2)/256)-1,maxY=Math.floor((center.y+h/2)/256)+1;
-    for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++){if(y<0||y>=2**z)continue;const xx=((x%2**z)+2**z)%2**z,key=`${z}/${xx}/${y}`;keep.add(key);let im=existing.get(key);if(!im){im=new Image();im.className='lab-tile';im.alt='';im.draggable=false;im.dataset.key=key;im.src=`https://tile.openstreetmap.org/${key}.png`;im.onerror=()=>{im.classList.add('failed');};elTiles.append(im);}im.style.left=(x*256-center.x+w/2)+'px';im.style.top=(y*256-center.y+h/2)+'px';}
+    for(let x=minX;x<=maxX;x++)for(let y=minY;y<=maxY;y++){if(y<0||y>=2**z)continue;const xx=((x%2**z)+2**z)%2**z,key=`${z}/${xx}/${y}`;keep.add(key);let im=existing.get(key);if(!im){im=new Image();im.className='lab-tile';im.alt='';im.draggable=false;im.dataset.key=key;im.referrerPolicy='no-referrer';im.dataset.fallback='0';im.onload=()=>{im.classList.remove('failed');};im.onerror=()=>{
+          if(im.dataset.fallback==='0'){
+            im.dataset.fallback='1';
+            im.src=`https://a.basemaps.cartocdn.com/light_all/${key}.png`;
+          }else{
+            im.classList.add('failed');
+            const notice=$('#lab-map-status');
+            if(notice){notice.hidden=false;notice.textContent='Map background is unavailable. Check connectivity or retry; NOAA overlays may still load.';}
+          }
+        };im.src=`https://tile.openstreetmap.org/${key}.png`;elTiles.append(im);}im.style.left=(x*256-center.x+w/2)+'px';im.style.top=(y*256-center.y+h/2)+'px';}
     for(const [key,im]of existing)if(!keep.has(key))im.remove();
     const box=[metersX(center.x-w/2,z),metersY(center.y+h/2,z),metersX(center.x+w/2,z),metersY(center.y-h/2,z)];
     const overlay=$('#lab-overlay'),status=$('#lab-map-status'),source=$('#lab-map-source'),notes=$('#lab-map-notes');
@@ -99,7 +108,7 @@
     if(fast){overlay.style.display='none';status.hidden=false;status.textContent='Move map to explore · updating on release';return;}
     if(!url){overlay.style.display='none';status.hidden=false;status.textContent=notUs?'This NOAA radar layer covers the United States. Use Past radar for global observations.':state.lightning?.error||'NOAA overlay not available.';return;}
     overlay.style.display='block';overlay.alt=captions[state.mode];status.hidden=false;status.textContent='Loading '+state.mode+' data…';const frame=++state.frameId;
-    const next=new Image();next.onload=()=>{if(frame!==state.frameId)return;overlay.src=next.src;overlay.style.display='block';state.lastImageAt=Date.now();status.hidden=true;};next.onerror=()=>{if(frame!==state.frameId)return;overlay.style.display='none';status.hidden=false;status.textContent='NOAA imagery unavailable at the moment. Base map remains active.';};next.src=url+(url.includes('?')?'&':'?')+'ts='+Math.floor(Date.now()/(state.mode==='radar'?300000:900000));
+    const next=new Image();next.onload=()=>{if(frame!==state.frameId)return;overlay.src=next.src;overlay.style.display='block';state.lastImageAt=Date.now();status.hidden=true;};next.onerror=()=>{if(frame!==state.frameId)return;overlay.style.display='none';status.hidden=false;status.textContent='NOAA image did not load. Try Past radar or another layer. The background map may still be available.';};next.src=url+(url.includes('?')?'&':'?')+'ts='+Math.floor(Date.now()/(state.mode==='radar'?300000:900000));
   }
   function adjustZoom(delta){state.zoom=Math.max(3,Math.min(10,state.zoom+delta));paintMap();}
   function resetMap(){const l=location();if(!l)return;state.center={latitude:Number(l.latitude),longitude:Number(l.longitude)};state.zoom=7;paintMap();}
